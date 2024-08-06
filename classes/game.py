@@ -39,7 +39,7 @@ class Game:
             'resources': {
                 'food': self.resources.food if self.resources else 0,
                 'ammo': self.resources.ammo if self.resources else 0,
-                'medicines': self.resources.medicines if self.resources else 0,
+                'health': self.resources.health if self.resources else 0,
             },
             'events': [str(event) for event in self.events],  # Adjust if Event objects are complex
             'game_state': self.game_state
@@ -66,7 +66,7 @@ class Game:
             self.resources = Resource(
                 food=game_data['resources']['food'],
                 ammo=game_data['resources']['ammo'],
-                medicines=game_data['resources']['medicines']
+                health=game_data['resources']['health']
             )
 
             
@@ -81,6 +81,8 @@ class Game:
     def start_game(self):
         """
         Starts the game by providing an introduction and initializing the character, resources, and events.
+
+        Prompts the player to create a character, sets initial inventory levels to 10, and initializes default resources and events.
         """
         # Welcome message
         print("\nWelcome to Red Trail Frontier!")
@@ -92,37 +94,105 @@ class Game:
         if self.character:
             print("\nLet's create your character.")
             name = input("Enter your character's name: ")
-            role = input("Enter your character's role (e.g., Melee, Archer, Mage): ")
-            
-            # Initialize character with basic skills
-            skills = {"exploration": 5}  # Default skills; you can expand this
-            self.character = Character(name=name, role=role, skills=skills)
-            
+            role = self._choose_role()
+
+            # Initialize character with role-based skills and default inventory
+            skills = self._get_role_skills(role)
+            inventory = {
+                'food': 10,
+                'ammo': 10,
+                'health': 10
+            }
+            self.character = Character(name=name, role=role, skills=skills, inventory=inventory)
+
             print("\nCharacter created successfully!")
             print(f"{'='*30}")
-            print(f"Name     : {self.character.name}")
-            print(f"Role     : {self.character.role}")
-            print(f"Skills   : {self.character.skills}")
+            print(self.character)
             print(f"{'='*30}")
 
         # Initialize resources
         if not self.resources:
             print("\nInitializing default resources.")
-            self.resources = Resource(food=10, ammo=5, medicines=3)
-        
-        print("\nResource status:")
-        print(f"{'='*30}")
-        print(f"Food       : {self.resources.food}")
-        print(f"Ammo       : {self.resources.ammo}")
-        print(f"Medicines  : {self.resources.medicines}")
-        print(f"{'='*30}")
+            self.resources = Resource(food=10, ammo=10, health=10)
 
         # Initialize events
         if not self.events:
             self.events.append(Event(description="A wild animal appears!", effect={'food': -2}))
             self.events.append(Event(description="You find a hidden stash of ammo!", effect={'ammo': 3}))
 
-        print("\nGame Initialized!")
+        print("\nGame Started!")
+
+    def _choose_role(self):
+        """
+        Prompts the user to choose a character role and displays available roles with predefined skills.
+
+        :return: The chosen role as a string.
+        """
+        roles = {
+            'Melee': {'damage': 7, 'defense': 9, 'speed': 3, 'sneak': 2},
+            'Archer': {'damage': 3, 'defense': 4, 'speed': 8, 'sneak': 6},
+            'Mage': {'damage': 6, 'defense': 5, 'speed': 5, 'sneak': 6}
+        }
+
+        print("\nChoose your role:")
+        for i, (role, skills) in enumerate(roles.items(), 1):
+            print(f"{i}. {role}")
+            print(f"   Skills: Damage={skills['damage']}, Defense={skills['defense']}, Speed={skills['speed']}, Sneak={skills['sneak']}")
+            print()
+
+        while True:
+            try:
+                choice = int(input("Enter the number of your chosen role: "))
+                if 1 <= choice <= len(roles):
+                    return list(roles.keys())[choice - 1]
+                else:
+                    print("Invalid choice. Please choose a number from the list.")
+            except ValueError:
+                print("Invalid input. Please enter a number.")
+
+    def _get_role_skills(self, role):
+        """
+        Retrieves the skill set based on the chosen role.
+
+        :param role: The chosen character role.
+        :return: A dictionary of skills for the chosen role.
+        """
+        role_skills = {
+            'Melee': {'damage': 7, 'defense': 9, 'speed': 3, 'sneak': 2},
+            'Archer': {'damage': 3, 'defense': 4, 'speed': 8, 'sneak': 6},
+            'Mage': {'damage': 6, 'defense': 5, 'speed': 5, 'sneak': 6}
+        }
+        return role_skills.get(role, {'damage': 0, 'defense': 0, 'speed': 0, 'sneak': 0})
+
+    def show_character(self):
+        """
+        Displays the character's details.
+
+        :return: None
+        """
+        if self.character:
+            print("\nCharacter Information:")
+            print(f"{'='*30}")
+            print(self.character)
+            print(f"{'='*30}")
+        else:
+            print("No character created yet.")
+
+    def show_resources(self):
+        """
+        Displays the current resources status.
+
+        :return: None
+        """
+        if self.resources:
+            print("\nResource Status:")
+            print(f"{'='*30}")
+            print(f"Food   : {self.resources.food}")
+            print(f"Ammo   : {self.resources.ammo}")
+            print(f"Health : {self.resources.health}")
+            print(f"{'='*30}")
+        else:
+            print("Resources not initialized yet.")
 
     def apply_event(self, event):
         """

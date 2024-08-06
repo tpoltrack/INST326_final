@@ -38,7 +38,7 @@ def display_resources(resources):
         print(f"{'='*30}")
         print(f"Food       : {resources.food}")
         print(f"Ammo       : {resources.ammo}")
-        print(f"Medicines  : {resources.medicines}")
+        print(f"health  : {resources.health}")
         print(f"{'='*30}")
     else:
         print("\nNo resources initialized yet.")
