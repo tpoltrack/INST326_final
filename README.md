@@ -54,9 +54,6 @@ INST326_final/
 ├── event.py
 └── game.py
 
-perl
-Copy code
-
 ## Classes
 
 - **Character**: Manages character attributes, skills, and inventory.
