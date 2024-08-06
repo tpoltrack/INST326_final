@@ -80,31 +80,49 @@ class Game:
 
     def start_game(self):
         """
-        Starts the game by initializing the character, resources, and events.
+        Starts the game by providing an introduction and initializing the character, resources, and events.
         """
+        # Welcome message
+        print("\nWelcome to Red Trail Frontier!")
+        print("Prepare to embark on a perilous journey across the Wild West.")
+        print("Face dangerous challenges, discover hidden treasures, and forge your destiny.")
+        input("Press Enter to continue...")
+
         # Prompt for character creation
-        if not self.character:
-            print("Creating a new character.")
+        if self.character:
+            print("\nLet's create your character.")
             name = input("Enter your character's name: ")
             role = input("Enter your character's role (e.g., Melee, Archer, Mage): ")
             
             # Initialize character with basic skills
             skills = {"exploration": 5}  # Default skills; you can expand this
             self.character = Character(name=name, role=role, skills=skills)
+            
+            print("\nCharacter created successfully!")
+            print(f"{'='*30}")
+            print(f"Name     : {self.character.name}")
+            print(f"Role     : {self.character.role}")
+            print(f"Skills   : {self.character.skills}")
+            print(f"{'='*30}")
 
         # Initialize resources
         if not self.resources:
-            print("Initializing default resources.")
+            print("\nInitializing default resources.")
             self.resources = Resource(food=10, ammo=5, medicines=3)
         
+        print("\nResource status:")
+        print(f"{'='*30}")
+        print(f"Food       : {self.resources.food}")
+        print(f"Ammo       : {self.resources.ammo}")
+        print(f"Medicines  : {self.resources.medicines}")
+        print(f"{'='*30}")
+
         # Initialize events
         if not self.events:
             self.events.append(Event(description="A wild animal appears!", effect={'food': -2}))
             self.events.append(Event(description="You find a hidden stash of ammo!", effect={'ammo': 3}))
 
-        print("Game Initialized!")
-        print(self.character)
-        print(self.resources)
+        print("\nGame Initialized!")
 
     def apply_event(self, event):
         """

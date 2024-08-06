@@ -15,6 +15,34 @@ def display_menu():
     print("6. Exit")
     print("============================")
 
+def display_character(character):
+    """
+    Displays the character information in a formatted manner.
+    """
+    if character:
+        print("\nCharacter Information")
+        print(f"{'='*30}")
+        print(f"Name     : {character.name}")
+        print(f"Role     : {character.role}")
+        print(f"Skills   : {character.skills}")
+        print(f"{'='*30}")
+    else:
+        print("\nNo character created yet.")
+
+def display_resources(resources):
+    """
+    Displays the resource status in a formatted manner.
+    """
+    if resources:
+        print("\nResource Status")
+        print(f"{'='*30}")
+        print(f"Food       : {resources.food}")
+        print(f"Ammo       : {resources.ammo}")
+        print(f"Medicines  : {resources.medicines}")
+        print(f"{'='*30}")
+    else:
+        print("\nNo resources initialized yet.")
+
 def main():
     """
     Main function to start and run the game.
@@ -33,13 +61,9 @@ def main():
         choice = input("Choose an option (1-6): ")
 
         if choice == "1":
-            print("\n=== Character Info ===")
-            print(game.character)
-            print("======================")
+            display_character(game.character)
         elif choice == "2":
-            print("\n=== Resource Info ===")
-            print(game.resources)
-            print("=====================")
+            display_resources(game.resources)
         elif choice == "3":
             if game.events:
                 import random
