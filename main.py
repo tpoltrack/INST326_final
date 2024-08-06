@@ -1,27 +1,50 @@
 # main.py
 
-from classes.character import Character
-from classes.resource import Resource
-from classes.event import Event
 from classes.game import Game
 
 def main():
     """
-    Main function to start the game.
+    Main function to start and run the game.
     """
-    # Example of creating a character and starting the game
-    player = Character(name="Trevor", role="Archer", skills={"archery": 5, "survival": 3})
-    resources = Resource(food=10, ammo=5, medicines=3)
     game = Game()
+    
+    # Optionally, load a previously saved game state
+    game.load_state()
 
-    game.character = player
-    game.resources = resources
+    # Start the game
+    game.start_game()
 
-    print("Game Started!")
-    print(player)
-    print(resources)
+    # Main game loop
+    while True:
+        print("\nMenu:")
+        print("1. Show Character")
+        print("2. Show Resources")
+        print("3. Apply Random Event")
+        print("4. Save Game")
+        print("5. Exit")
 
-    # Add more game logic here
+        choice = input("Choose an option: ")
+
+        if choice == "1":
+            print(game.character)
+        elif choice == "2":
+            print(game.resources)
+        elif choice == "3":
+            if game.events:
+                import random
+                event = random.choice(game.events)
+                game.apply_event(event)
+            else:
+                print("No events available.")
+        elif choice == "4":
+            game.save_state()
+            print("Game saved.")
+        elif choice == "5":
+            game.save_state()  # Save game state before exiting
+            print("Exiting game.")
+            break
+        else:
+            print("Invalid option, please try again.")
 
 if __name__ == "__main__":
     main()

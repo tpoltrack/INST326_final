@@ -46,7 +46,7 @@ INST326_final/
 ├── .gitignore
 ├── README.md
 ├── main.py
-├── game_data.json (to be created)
+├── game_data.json (to be created upon running the game)
 └── classes/
 ├── init.py
 ├── character.py
@@ -54,12 +54,21 @@ INST326_final/
 ├── event.py
 └── game.py
 
+perl
+Copy code
+
 ## Classes
 
 - **Character**: Manages character attributes, skills, and inventory.
 - **Resource**: Manages resources like food, ammo, and medicines.
 - **Event**: Represents events that affect the game.
-- **Game**: Manages the game state and interactions.
+- **Game**: Manages the game state and interactions, including saving and loading game state.
+
+## Game State Management
+
+- **`game_data.json`**: File to store the game state.
+- **`save_state()`**: Method in the `Game` class to save the current game state to `game_data.json`.
+- **`load_state()`**: Method in the `Game` class to load the game state from `game_data.json`.
 
 ## Contributing
 
@@ -78,10 +87,6 @@ INST326_final/
     git push origin feature/your-feature
     ```
 6. Create a new Pull Request.
-
-## License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ## Acknowledgments
 
