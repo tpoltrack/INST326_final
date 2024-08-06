@@ -82,17 +82,25 @@ class Game:
         """
         Starts the game by initializing the character, resources, and events.
         """
-        # Example initialization; adjust as needed
+        # Prompt for character creation
         if not self.character:
-            print("Creating default character.")
-            self.character = Character(name="Default", role="Explorer", skills={"exploration": 5})
+            print("Creating a new character.")
+            name = input("Enter your character's name: ")
+            role = input("Enter your character's role (e.g., Melee, Archer, Mage): ")
+            
+            # Initialize character with basic skills
+            skills = {"exploration": 5}  # Default skills; you can expand this
+            self.character = Character(name=name, role=role, skills=skills)
+
+        # Initialize resources
         if not self.resources:
             print("Initializing default resources.")
             self.resources = Resource(food=10, ammo=5, medicines=3)
         
-        # Example of adding random events
-        self.events.append(Event(description="A wild animal appears!", effect={'food': -2}))
-        self.events.append(Event(description="You find a hidden stash of ammo!", effect={'ammo': 3}))
+        # Initialize events
+        if not self.events:
+            self.events.append(Event(description="A wild animal appears!", effect={'food': -2}))
+            self.events.append(Event(description="You find a hidden stash of ammo!", effect={'ammo': 3}))
 
         print("Game Initialized!")
         print(self.character)
