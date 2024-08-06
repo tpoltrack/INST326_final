@@ -21,7 +21,8 @@ def main():
         print("2. Show Resources")
         print("3. Apply Random Event")
         print("4. Save Game")
-        print("5. Exit")
+        print("5. Restart Game")
+        print("6. Exit")
 
         choice = input("Choose an option: ")
 
@@ -40,6 +41,8 @@ def main():
             game.save_state()
             print("Game saved.")
         elif choice == "5":
+            game.restart_game()
+        elif choice == "6":
             game.save_state()  # Save game state before exiting
             print("Exiting game.")
             break

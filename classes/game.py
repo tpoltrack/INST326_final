@@ -69,7 +69,7 @@ class Game:
                 medicines=game_data['resources']['medicines']
             )
 
-            # If Event class is complex, you may need to parse it differently
+            
             self.events = [Event(description=event, effect={}) for event in game_data['events']]
             
             self.game_state = game_data['game_state']
@@ -107,6 +107,18 @@ class Game:
         """
         event.trigger(self.character)
         print(f"Event Applied: {event.description}")
+        
+    def restart_game(self):
+        """
+        Resets the game state to start from the beginning.
+        """
+        self.character = None
+        self.resources = None
+        self.events = []
+        self.game_state = {}
+
+        print("Game has been restarted.")
+        self.start_game()  # Re-initialize the game
 
     def __str__(self):
         """
