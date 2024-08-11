@@ -80,3 +80,104 @@ class ChestOfFoodEvent(Event):
         food_found = random.randint(1, 3)  # Randomly determine the amount of food found
         resources.food += food_found
         print(f"You found {food_found} units of food in the chest.")
+        
+
+class AmmoBoxEvent(Event):
+    """
+    Event where the player finds an ammo box. The box contains either 2 or 3 ammo.
+    """
+    def __init__(self):
+        """
+        Initializes the ammo box event with a description and effect.
+        """
+        description = "You find an ammo box! It contains either 2 or 3 ammo."
+        effect = {}  # Effects will be applied in the handle_event method
+        super().__init__(description, effect)
+
+    def handle_event(self, resources):
+        """
+        Handles the ammo box event.
+
+        :param resources: An instance of the Resource class to modify.
+        :return: None
+        """
+        ammo_found = random.choice([2, 3])  # Randomly determine the amount of ammo found
+        resources.ammo = min(resources.ammo + ammo_found, 100)  # Cap ammo at 100
+        print(f"You found {ammo_found} ammo in the box.")
+
+
+class WeaselEvent(Event):
+    """
+    Event where the player encounters a weasel trying to steal food.
+    """
+    def __init__(self):
+        """
+        Initializes the weasel event with a description and effect.
+        """
+        description = "A weasel tries to steal your food! You can try to kill it with ammo."
+        effect = {}  # Effects will be applied in the handle_event method
+        super().__init__(description, effect)
+
+    def handle_event(self, resources):
+        """
+        Handles the weasel event.
+
+        :param resources: An instance of the Resource class to modify.
+        :return: None
+        """
+        if resources.ammo > 0:
+            # Player has ammo, chance to kill the weasel
+            resources.ammo -= 1
+            if random.random() < 0.5:  # 50% chance to kill the weasel
+                print("You successfully killed the weasel with your ammo. It didn't steal any food.")
+            else:
+                food_stolen = random.randint(1, 3)  # Randomly determine the amount of food stolen
+                resources.food = max(0, resources.food - food_stolen)  # Deduct stolen food, ensure it does not go below 0
+                print(f"The weasel escaped and stole {food_stolen} units of food.")
+        else:
+            food_stolen = random.randint(1, 3)  # Randomly determine the amount of food stolen
+            resources.food = max(0, resources.food - food_stolen)  # Deduct stolen food, ensure it does not go below 0
+            print(f"The weasel steals {food_stolen} units of food from you.")
+
+
+class TravelerEvent(Event):
+    """
+    Event where the player encounters a traveler who could be good or bad.
+    """
+    def __init__(self):
+        """
+        Initializes the traveler event with a description and effect.
+        """
+        description = "You encounter a traveler who could be friendly or hostile."
+        effect = {}  # Effects will be applied in the handle_event method
+        super().__init__(description, effect)
+
+    def handle_event(self, resources):
+        """
+        Handles the traveler event.
+
+        :param resources: An instance of the Resource class to modify.
+        :return: None
+        """
+        if random.random() < 0.5:  # 50% chance traveler is good
+            print("The traveler is friendly and offers you a place to rest. Your health is restored to 10.")
+            resources.health = 10
+        else:  # Traveler is hostile
+            print("The traveler is hostile! You need to fight him.")
+            while True:
+                if resources.ammo > 0:
+                    action = input("Do you want to use ammo to fight the traveler? (yes/no): ").strip().lower()
+                    if action == 'yes':
+                        resources.ammo -= 1
+                        if random.random() < 0.5:  # 50% chance the traveler will shoot
+                            resources.health = max(0, resources.health - 3)  # Deduct health, ensure it does not go below 0
+                            print("You killed the traveler, but he shot you and you lost 3 health.")
+                        else:
+                            print("You killed the traveler and avoided being shot.")
+                        break
+                    else:
+                        print("You missed the chance to fight. The traveler continues to attack!")
+                else:
+                    print("You have no ammo to fight the traveler. The traveler steals 3 health from you.")
+                    resources.health = max(0, resources.health - 3)  # Deduct health, ensure it does not go below 0
+                    break

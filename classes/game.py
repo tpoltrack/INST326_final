@@ -1,6 +1,6 @@
 # classes/game.py
 
-from .event import SnakeBiteEvent, ChestOfFoodEvent
+from .event import SnakeBiteEvent, ChestOfFoodEvent, AmmoBoxEvent, WeaselEvent, TravelerEvent
 import json
 from .character import Character
 from .resource import Resource
@@ -71,7 +71,7 @@ class Game:
                 health=game_data['resources']['health']
             )
 
-            self.events = [SnakeBiteEvent(), ChestOfFoodEvent()]
+            self.events = [SnakeBiteEvent(), ChestOfFoodEvent(), AmmoBoxEvent(), WeaselEvent(), TravelerEvent()]
 
             self.game_state = game_data['game_state']
         except FileNotFoundError:
@@ -199,7 +199,7 @@ class Game:
         """
         self.character = Character("Default", "Explorer", {"damage": 5, "defense": 5, "speed": 5, "sneak": 5})
         self.resources = Resource(health=10, food=10, ammo=10)
-        self.events = [SnakeBiteEvent(), ChestOfFoodEvent()]  # Initialize with SnakeBiteEvent
+        self.events = [SnakeBiteEvent(), ChestOfFoodEvent(), AmmoBoxEvent(), WeaselEvent(), TravelerEvent()]  # Initialize with SnakeBiteEvent
 
     def apply_random_event(self):
         """
