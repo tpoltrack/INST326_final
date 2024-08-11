@@ -22,6 +22,7 @@ class Resource:
         self.food = food
         self.ammo = ammo
         self.health = health
+
     def __str__(self):
         """
         Returns a string representation of the resources.
@@ -29,4 +30,12 @@ class Resource:
         Returns:
             str: A string description of the resources.
         """
-        return f"Food: {self.food}, Ammo: {self.ammo}, health: {self.health}"
+        return f"Food: {self.food}, Ammo: {self.ammo}, Health: {self.health}"
+    
+    def add_food(self, amount):
+        """
+        Adds food to the resources, ensuring it does not exceed the maximum cap.
+
+        :param amount: The amount of food to add.
+        """
+        self.food = min(self.food + amount, 100)  # Cap food at 100

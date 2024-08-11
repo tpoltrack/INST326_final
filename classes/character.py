@@ -27,7 +27,7 @@ class Character:
                       f"Sneak={self.skills.get('sneak', 0)}")
         inventory_str = (f"Food={self.inventory.get('food', 0)}, "
                          f"Ammo={self.inventory.get('ammo', 0)}, "
-                         f"health={self.inventory.get('health', 0)}")
+                         f"Health={self.inventory.get('health', 0)}")
         return (f"Name     : {self.name}\n"
                 f"Role     : {self.role}\n"
                 f"Skills   : {skills_str}\n"

@@ -38,7 +38,7 @@ def display_resources(resources):
         print(f"{'='*30}")
         print(f"Food       : {resources.food}")
         print(f"Ammo       : {resources.ammo}")
-        print(f"health  : {resources.health}")
+        print(f"Health     : {resources.health}")
         print(f"{'='*30}")
     else:
         print("\nNo resources initialized yet.")
@@ -60,29 +60,21 @@ def main():
         display_menu()
         choice = input("Choose an option (1-6): ")
 
-        if choice == "1":
-            display_character(game.character)
-        elif choice == "2":
-            display_resources(game.resources)
-        elif choice == "3":
-            if game.events:
-                import random
-                event = random.choice(game.events)
-                game.apply_event(event)
-                print(f"\nEvent Applied: {event.description}")
-            else:
-                print("\nNo events available.")
-        elif choice == "4":
+        if choice == '1':
+            game.show_character()
+        elif choice == '2':
+            game.show_resources()
+        elif choice == '3':
+            game.apply_random_event()
+        elif choice == '4':
             game.save_state()
-            print("\nGame saved successfully.")
-        elif choice == "5":
-            game.restart_game()
-        elif choice == "6":
-            game.save_state()  # Save game state before exiting
-            print("\nExiting game. Goodbye!")
+        elif choice == '5':
+            game.restart()
+        elif choice == '6':
+            print("Thank you for playing Red Trail Redemption!")
             break
         else:
-            print("\nInvalid option, please try again.")
+            print("Invalid choice. Please choose a valid option.")
 
 if __name__ == "__main__":
     main()

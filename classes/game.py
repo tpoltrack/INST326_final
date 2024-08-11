@@ -1,9 +1,10 @@
 # classes/game.py
 
+from .event import SnakeBiteEvent, ChestOfFoodEvent
 import json
 from .character import Character
 from .resource import Resource
-from .event import Event
+import random
 
 class Game:
     """
@@ -24,6 +25,7 @@ class Game:
         self.resources = None
         self.events = []
         self.game_state = {}
+        self.event_count = 0  # Counter for events applied
 
     def save_state(self):
         """
@@ -41,7 +43,7 @@ class Game:
                 'ammo': self.resources.ammo if self.resources else 0,
                 'health': self.resources.health if self.resources else 0,
             },
-            'events': [str(event) for event in self.events],  # Adjust if Event objects are complex
+            'events': [str(event) for event in self.events],
             'game_state': self.game_state
         }
 
@@ -59,9 +61,9 @@ class Game:
             self.character = Character(
                 name=game_data['character']['name'],
                 role=game_data['character']['role'],
-                skills=game_data['character']['skills']
+                skills=game_data['character']['skills'],
+                inventory=game_data['character']['inventory']
             )
-            self.character.inventory = game_data['character']['inventory']
 
             self.resources = Resource(
                 food=game_data['resources']['food'],
@@ -69,9 +71,8 @@ class Game:
                 health=game_data['resources']['health']
             )
 
-            
-            self.events = [Event(description=event, effect={}) for event in game_data['events']]
-            
+            self.events = [SnakeBiteEvent(), ChestOfFoodEvent()]
+
             self.game_state = game_data['game_state']
         except FileNotFoundError:
             print("No saved game found.")
@@ -81,8 +82,6 @@ class Game:
     def start_game(self):
         """
         Starts the game by providing an introduction and initializing the character, resources, and events.
-
-        Prompts the player to create a character, sets initial inventory levels to 10, and initializes default resources and events.
         """
         # Welcome message
         print("\nWelcome to Red Trail Frontier!")
@@ -117,8 +116,8 @@ class Game:
 
         # Initialize events
         if not self.events:
-            self.events.append(Event(description="A wild animal appears!", effect={'food': -2}))
-            self.events.append(Event(description="You find a hidden stash of ammo!", effect={'ammo': 3}))
+            self.events.append(SnakeBiteEvent())  # Ensure SnakeBiteEvent is initialized
+            self.events.append(ChestOfFoodEvent())  # Add ChestOfFoodEvent
 
         print("\nGame Started!")
 
@@ -194,27 +193,33 @@ class Game:
         else:
             print("Resources not initialized yet.")
 
-    def apply_event(self, event):
+    def initialize(self):
         """
-        Applies an event to the current game state.
+        Initializes the game with default character, resources, and events.
+        """
+        self.character = Character("Default", "Explorer", {"damage": 5, "defense": 5, "speed": 5, "sneak": 5})
+        self.resources = Resource(health=10, food=10, ammo=10)
+        self.events = [SnakeBiteEvent(), ChestOfFoodEvent()]  # Initialize with SnakeBiteEvent
 
-        Args:
-            event (Event): The event to apply.
+    def apply_random_event(self):
         """
-        event.trigger(self.character)
-        print(f"Event Applied: {event.description}")
+        Applies a random event to the game, affecting resources based on event effects.
+        """
+        event = random.choice(self.events)
+        print(f"\nEvent: {event.description}")
+        event.handle_event(self.resources)
+        self.show_resources()  # Show updated resources after event
         
-    def restart_game(self):
-        """
-        Resets the game state to start from the beginning.
-        """
-        self.character = None
-        self.resources = None
-        self.events = []
-        self.game_state = {}
+        # Increment the event counter
+        self.event_count += 1
 
-        print("Game has been restarted.")
-        self.start_game()  # Re-initialize the game
+        # Drop food level after every 3-5 events
+        if self.event_count % random.randint(3, 5) == 0:
+            self.resources.food = max(0, self.resources.food - 1)
+            print(f"Food level has dropped by 1. Current food: {self.resources.food}")
+        
+        if self.check_game_over():
+            self.restart_or_quit()
 
     def __str__(self):
         """
@@ -224,3 +229,34 @@ class Game:
             str: A string description of the game state.
         """
         return f"Character: {self.character}, Resources: {self.resources}, Events: {self.events}, Game State: {self.game_state}"
+
+    def restart(self):
+        """
+        Restarts the game by re-initializing character, resources, and events.
+        """
+        self.initialize()
+        print("Game has been restarted.")
+        
+    def check_game_over(self):
+        """
+        Checks if the game is over due to health or food reaching 0.
+        """
+        if self.resources.health <= 0:
+            print("Game Over! You have died.")
+            return True
+        if self.resources.food <= 0:
+            print("Game Over! You have starved to death.")
+            return True
+        return False
+    
+    def restart_or_quit(self):
+        """
+        Asks the player if they want to restart the game or quit.
+        """
+        choice = input("Do you want to play again? (yes/no): ").strip().lower()
+        if choice == 'yes':
+            self.__init__()  # Reinitialize the game
+            self.start_game()
+        else:
+            print("Thank you for playing Red Trail Redemption!")
+            exit()  # Exit the program
