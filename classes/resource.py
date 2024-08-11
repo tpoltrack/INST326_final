@@ -10,7 +10,7 @@ class Resource:
         health (int): Amount of health.
     """
 
-    def __init__(self, food=0, ammo=0, health=0):
+    def __init__(self, food=10, ammo=10, health=10):
         """
         Initializes resources with given amounts.
 
@@ -38,4 +38,10 @@ class Resource:
 
         :param amount: The amount of food to add.
         """
-        self.food = min(self.food + amount, 100)  # Cap food at 100
+        self.food += amount
+        
+    def add_ammo(self, amount):
+        """
+        Adds ammo to the resource, allowing ammo to exceed the previous cap.
+        """
+        self.ammo += amount

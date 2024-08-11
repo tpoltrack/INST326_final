@@ -1,4 +1,4 @@
-# main.py
+#classes/main.py
 
 from classes.game import Game
 
@@ -22,9 +22,9 @@ def display_character(character):
     if character:
         print("\nCharacter Information")
         print(f"{'='*30}")
-        print(f"Name     : {character.name}")
-        print(f"Role     : {character.role}")
-        print(f"Skills   : {character.skills}")
+        print(f"Name      : {character.name}")
+        print(f"Role      : {character.role}")
+        print(f"Abilities : {character.abilities}")
         print(f"{'='*30}")
     else:
         print("\nNo character created yet.")

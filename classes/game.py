@@ -7,25 +7,20 @@ from .resource import Resource
 import random
 
 class Game:
-    """
-    Manages the game state and interactions.
-
-    Attributes:
-        character (Character): The main character in the game.
-        resources (Resource): The resources available to the character.
-        events (list): List of events that can occur in the game.
-        game_state (dict): Dictionary to store the game state.
-    """
-
     def __init__(self):
         """
         Initializes a new game instance.
         """
         self.character = None
         self.resources = None
-        self.events = []
+        self.events = [AmmoBoxEvent(), WeaselEvent(), TravelerEvent(), SnakeBiteEvent(), ChestOfFoodEvent()]
         self.game_state = {}
-        self.event_count = 0  # Counter for events applied
+        self.event_count = 0
+        self.roles = {
+            '1': 'Sharpshooter',
+            '2': 'Explorer',
+            '3': 'Pacifist'
+        }
 
     def save_state(self):
         """
@@ -35,13 +30,12 @@ class Game:
             'character': {
                 'name': self.character.name if self.character else "",
                 'role': self.character.role if self.character else "",
-                'skills': self.character.skills if self.character else {},
-                'inventory': self.character.inventory if self.character else {},
-            },
-            'resources': {
-                'food': self.resources.food if self.resources else 0,
-                'ammo': self.resources.ammo if self.resources else 0,
-                'health': self.resources.health if self.resources else 0,
+                'resources': {
+                    'food': self.character.resources.food if self.character else 0,
+                    'ammo': self.character.resources.ammo if self.character else 0,
+                    'health': self.character.resources.health if self.character else 0,
+                },
+                'abilities': self.character.abilities if self.character else {}
             },
             'events': [str(event) for event in self.events],
             'game_state': self.game_state
@@ -61,14 +55,12 @@ class Game:
             self.character = Character(
                 name=game_data['character']['name'],
                 role=game_data['character']['role'],
-                skills=game_data['character']['skills'],
-                inventory=game_data['character']['inventory']
-            )
-
-            self.resources = Resource(
-                food=game_data['resources']['food'],
-                ammo=game_data['resources']['ammo'],
-                health=game_data['resources']['health']
+                resources=Resource(
+                    food=game_data['character']['resources']['food'],
+                    ammo=game_data['character']['resources']['ammo'],
+                    health=game_data['character']['resources']['health']
+                ),
+                abilities=game_data['character']['abilities']
             )
 
             self.events = [SnakeBiteEvent(), ChestOfFoodEvent(), AmmoBoxEvent(), WeaselEvent(), TravelerEvent()]
@@ -83,180 +75,174 @@ class Game:
         """
         Starts the game by providing an introduction and initializing the character, resources, and events.
         """
-        # Welcome message
         print("\nWelcome to Red Trail Frontier!")
         print("Prepare to embark on a perilous journey across the Wild West.")
         print("Face dangerous challenges, discover hidden treasures, and forge your destiny.")
         input("Press Enter to continue...")
 
-        # Prompt for character creation
-        if self.character:
+        if self.character is None or self.resources is None:
             print("\nLet's create your character.")
             name = input("Enter your character's name: ")
-            role = self._choose_role()
+            role, abilities = self._choose_role()
 
-            # Initialize character with role-based skills and default inventory
-            skills = self._get_role_skills(role)
-            inventory = {
-                'food': 10,
-                'ammo': 10,
-                'health': 10
-            }
-            self.character = Character(name=name, role=role, skills=skills, inventory=inventory)
+            resources = Resource(food=10, ammo=10, health=10)  # Initialize resources here
+            self.character = Character(name=name, role=role, resources=resources, abilities=abilities)
 
             print("\nCharacter created successfully!")
             print(f"{'='*30}")
             print(self.character)
             print(f"{'='*30}")
 
-        # Initialize resources
-        if not self.resources:
-            print("\nInitializing default resources.")
-            self.resources = Resource(food=10, ammo=10, health=10)
-
-        # Initialize events
-        if not self.events:
-            self.events.append(SnakeBiteEvent())  # Ensure SnakeBiteEvent is initialized
-            self.events.append(ChestOfFoodEvent())  # Add ChestOfFoodEvent
-
         print("\nGame Started!")
 
     def _choose_role(self):
         """
-        Prompts the user to choose a character role and displays available roles with predefined skills.
+        Prompts the user to choose a character role and displays available roles with predefined abilities and unlock requirements.
 
-        :return: The chosen role as a string.
+        :return: The chosen role as a string and its corresponding abilities.
         """
-        roles = {
-            'Melee': {'damage': 7, 'defense': 9, 'speed': 3, 'sneak': 2},
-            'Archer': {'damage': 3, 'defense': 4, 'speed': 8, 'sneak': 6},
-            'Mage': {'damage': 6, 'defense': 5, 'speed': 5, 'sneak': 6}
+        # Define abilities and their unlock requirements
+        role_abilities = {
+            'Sharpshooter': {
+                'first': 'Increase success rate by 10% in shooting events.',
+                'second': 'Increase success rate by 20% in shooting events.',
+                'third': 'Increase success rate by 30% in shooting events.'
+            },
+            'Explorer': {
+                'first': 'Chance to get +1 food or ammo on top of what is found.',
+                'second': '10% increased chance of finding food or ammo in events.',
+                'third': 'Losing one food will also restore one health.'
+            },
+            'Pacifist': {
+                'first': '20% chance to flee from events that might take health away.',
+                'second': '30% chance to flee from a hostile traveler.',
+                'third': '30% chance to flee from events that might take health away.'
+            }
         }
 
         print("\nChoose your role:")
-        for i, (role, skills) in enumerate(roles.items(), 1):
-            print(f"{i}. {role}")
-            print(f"   Skills: Damage={skills['damage']}, Defense={skills['defense']}, Speed={skills['speed']}, Sneak={skills['sneak']}")
-            print()
+        for key, role in self.roles.items():
+            abilities = role_abilities[role]
+            print(f"\n{key}. {role}")
+            print("   Abilities:")
+            for ability, description in abilities.items():
+                print(f"     - {description} (Unlocks after {self._get_unlock_threshold(role, ability)} events)")
 
-        while True:
-            try:
-                choice = int(input("Enter the number of your chosen role: "))
-                if 1 <= choice <= len(roles):
-                    return list(roles.keys())[choice - 1]
-                else:
-                    print("Invalid choice. Please choose a number from the list.")
-            except ValueError:
-                print("Invalid input. Please enter a number.")
+        choice = input("\nEnter the number of your chosen role: ")
 
-    def _get_role_skills(self, role):
+        role_name = self.roles.get(choice, 'Unknown')
+        abilities = self._get_role_abilities(role_name)
+        
+        return role_name, abilities
+
+    def _get_unlock_threshold(self, role, ability):
         """
-        Retrieves the skill set based on the chosen role.
+        Retrieves the unlock threshold for a given role and ability.
 
         :param role: The chosen character role.
-        :return: A dictionary of skills for the chosen role.
+        :param ability: The ability to check.
+        :return: The number of events required to unlock the ability.
         """
-        role_skills = {
-            'Melee': {'damage': 7, 'defense': 9, 'speed': 3, 'sneak': 2},
-            'Archer': {'damage': 3, 'defense': 4, 'speed': 8, 'sneak': 6},
-            'Mage': {'damage': 6, 'defense': 5, 'speed': 5, 'sneak': 6}
+        thresholds = {
+            'Sharpshooter': {'first': 1, 'second': 10, 'third': 20},
+            'Explorer': {'first': 1, 'second': 10, 'third': 20},
+            'Pacifist': {'first': 1, 'second': 10, 'third': 20}
         }
-        return role_skills.get(role, {'damage': 0, 'defense': 0, 'speed': 0, 'sneak': 0})
+        return thresholds.get(role, {}).get(ability, 'Unknown')
+
+    def _get_role_abilities(self, role_name):
+        """
+        Retrieves the abilities for a given role.
+
+        :param role_name: The name of the chosen role.
+        :return: The abilities associated with the role.
+        """
+        # Placeholder for actual ability retrieval logic
+        abilities = {
+            'Sharpshooter': ['Increase success rate in shooting events'],
+            'Explorer': ['Chance to get extra food or ammo'],
+            'Pacifist': ['Chance to flee from health-threatening events']
+        }
+        return abilities.get(role_name, [])
 
     def show_character(self):
         """
-        Displays the character's details.
-
-        :return: None
+        Displays the character information along with role-specific abilities.
         """
         if self.character:
-            print("\nCharacter Information:")
+            print("\nCharacter Information")
             print(f"{'='*30}")
-            print(self.character)
+            print(f"Name      : {self.character.name}")
+            print(f"Role      : {self.character.role}")
+
+            # Display abilities with descriptions
+            abilities = self.character.abilities
+            role = self.character.role
+
+            if role == "Sharpshooter":
+                descriptions = [
+                    "10% increase in successfully shooting and killing any of the events that try to fight.",
+                    "20% increase in success rate.",
+                    "30% increase in success rate."
+                ]
+            elif role == "Explorer":
+                descriptions = [
+                    "Chance to get +1 food and ammo on top of what is found in events.",
+                    "10% increased chance of finding food or ammo in events.",
+                    "Losing one food will also restore one health."
+                ]
+            elif role == "Pacifist":
+                descriptions = [
+                    "20% chance to flee any event that might take health away.",
+                    "30% chance to miss and flee from a hostile traveler.",
+                    "30% chance to flee any event that might take health away."
+                ]
+            else:
+                descriptions = ["???", "???", "???"]
+
+            for i, (key, unlocked) in enumerate(abilities.items(), start=1):
+                desc = descriptions[i-1] if unlocked else "???"
+                print(f"Ability {i} : {desc}")
+
             print(f"{'='*30}")
         else:
-            print("No character created yet.")
-
+            print("\nNo character created yet.")
+    
     def show_resources(self):
         """
-        Displays the current resources status.
-
-        :return: None
+        Displays the current state of the character's resources.
         """
-        if self.resources:
-            print("\nResource Status:")
-            print(f"{'='*30}")
-            print(f"Food   : {self.resources.food}")
-            print(f"Ammo   : {self.resources.ammo}")
-            print(f"Health : {self.resources.health}")
-            print(f"{'='*30}")
+        if self.character:
+            print("Character Resources:")
+            print("==============================")
+            print(f"Food      : {self.character.resources.food}")
+            print(f"Ammo      : {self.character.resources.ammo}")
+            print(f"Health    : {self.character.resources.health}")
+            print("==============================")
         else:
-            print("Resources not initialized yet.")
-
-    def initialize(self):
-        """
-        Initializes the game with default character, resources, and events.
-        """
-        self.character = Character("Default", "Explorer", {"damage": 5, "defense": 5, "speed": 5, "sneak": 5})
-        self.resources = Resource(health=10, food=10, ammo=10)
-        self.events = [SnakeBiteEvent(), ChestOfFoodEvent(), AmmoBoxEvent(), WeaselEvent(), TravelerEvent()]  # Initialize with SnakeBiteEvent
+            print("No character has been created yet.")
 
     def apply_random_event(self):
         """
-        Applies a random event to the game, affecting resources based on event effects.
+        Applies a random event to the character and updates the game state.
         """
-        event = random.choice(self.events)
-        print(f"\nEvent: {event.description}")
-        event.handle_event(self.resources)
-        self.show_resources()  # Show updated resources after event
-        
-        # Increment the event counter
-        self.event_count += 1
+        if self.character:
+            event = random.choice(self.events)
+            print(f"\nYou encounter a {event.__class__.__name__}!")
 
-        # Drop food level after every 3-5 events
-        if self.event_count % random.randint(3, 5) == 0:
-            self.resources.food = max(0, self.resources.food - 1)
-            print(f"Food level has dropped by 1. Current food: {self.resources.food}")
-        
-        if self.check_game_over():
-            self.restart_or_quit()
+            # Apply role-specific abilities
+            success_rate = event.calculate_success_rate()
+            success_rate = self.character.apply_role_ability(event.event_type, success_rate)
 
-    def __str__(self):
-        """
-        Returns a string representation of the game.
+            # Process the event
+            result = event.process_event(self.character, self.character.resources, success_rate)
+            print("Event Result:", "Success" if result else "Failure")
 
-        Returns:
-            str: A string description of the game state.
-        """
-        return f"Character: {self.character}, Resources: {self.resources}, Events: {self.events}, Game State: {self.game_state}"
-
-    def restart(self):
-        """
-        Restarts the game by re-initializing character, resources, and events.
-        """
-        self.initialize()
-        print("Game has been restarted.")
-        
-    def check_game_over(self):
-        """
-        Checks if the game is over due to health or food reaching 0.
-        """
-        if self.resources.health <= 0:
-            print("Game Over! You have died.")
-            return True
-        if self.resources.food <= 0:
-            print("Game Over! You have starved to death.")
-            return True
-        return False
-    
-    def restart_or_quit(self):
-        """
-        Asks the player if they want to restart the game or quit.
-        """
-        choice = input("Do you want to play again? (yes/no): ").strip().lower()
-        if choice == 'yes':
-            self.__init__()  # Reinitialize the game
-            self.start_game()
+            self.event_count += 1
+            self.character.unlock_ability(self.event_count)
+            
+            # Show character and resources after the event
+            self.show_character()
+            self.show_resources()
         else:
-            print("Thank you for playing Red Trail Redemption!")
-            exit()  # Exit the program
+            print("No character has been created yet.")

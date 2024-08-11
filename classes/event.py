@@ -1,183 +1,190 @@
-# classes/events.py
+#classes/event.py
 
 import random
-from .resource import Resource
 
 class Event:
     """
-    Base class for defining an event in the game.
+    Base class for events in the game.
     """
-    def __init__(self, description, effect):
+    def __init__(self, event_type):
         """
-        Initializes an event with a description and effect.
+        Initializes an event with a specific event type.
+        """
+        self.event_type = event_type
 
-        :param description: A string describing the event.
-        :param effect: A dictionary where keys are resource names and values are changes to apply.
+    def process_event(self, character, resources, success_rate):
         """
-        self.description = description
-        self.effect = effect
+        Processes the event. This method should be overridden by subclasses.
+        """
+        raise NotImplementedError("Subclasses must implement this method.")
 
-    def __str__(self):
+    def calculate_success_rate(self):
         """
-        Returns a string representation of the event.
+        Calculates the success rate of the event.
+        """
+        return random.random()
 
-        :return: A string describing the event and its effect.
-        """
-        return f"{self.description} | Effect: {self.effect}"
-
-
-class SnakeBiteEvent(Event):
-    """
-    Event where a snake tries to bite the player. If the player has ammo, they can use it to fight the snake.
-    """
-    def __init__(self):
-        """
-        Initializes the snake bite event with a description and effect.
-        """
-        description = "A snake tries to bite you! You can use ammo to fight it."
-        effect = {}  # Effects will be applied in the handle_event method
-        super().__init__(description, effect)
-
-    def handle_event(self, resources):
-        """
-        Handles the snake bite event.
-
-        :param resources: An instance of the Resource class to modify.
-        :return: None
-        """
-        if resources.ammo > 0:
-            # Player has ammo, chance to kill the snake
-            resources.ammo -= 1
-            if random.random() < 0.5:  # 50% chance to kill the snake
-                print("You successfully killed the snake with your ammo. No health lost.")
-            else:
-                print("You missed the snake and it bites you. You lose 2 health.")
-                resources.health = max(0, resources.health - 2)  # Deduct health, ensure it does not go below 0
-        else:
-            print("You have no ammo to fight the snake. It bites you, and you lose 2 health.")
-            resources.health = max(0, resources.health - 2)  # Deduct health, ensure it does not go below 0
-            
-            
-class ChestOfFoodEvent(Event):
-    """
-    Event where the player finds a chest of food. The chest contains between 1 to 3 units of food.
-    """
-    def __init__(self):
-        """
-        Initializes the chest of food event with a description and effect.
-        """
-        description = "You find a chest of food! It contains between 1 to 3 units of food."
-        effect = {}  # Effects will be applied in the handle_event method
-        super().__init__(description, effect)
-
-    def handle_event(self, resources):
-        """
-        Handles the chest of food event.
-
-        :param resources: An instance of the Resource class to modify.
-        :return: None
-        """
-        food_found = random.randint(1, 3)  # Randomly determine the amount of food found
-        resources.food += food_found
-        print(f"You found {food_found} units of food in the chest.")
-        
 
 class AmmoBoxEvent(Event):
     """
-    Event where the player finds an ammo box. The box contains either 2 or 3 ammo.
+    Represents an ammo box event that gives the player extra ammo.
     """
     def __init__(self):
+        super().__init__('ammo_box')
+    
+    def process_event(self, character, resources, success_rate):
         """
-        Initializes the ammo box event with a description and effect.
+        Processes the ammo box event.
         """
-        description = "You find an ammo box! It contains either 2 or 3 ammo."
-        effect = {}  # Effects will be applied in the handle_event method
-        super().__init__(description, effect)
-
-    def handle_event(self, resources):
-        """
-        Handles the ammo box event.
-
-        :param resources: An instance of the Resource class to modify.
-        :return: None
-        """
-        ammo_found = random.choice([2, 3])  # Randomly determine the amount of ammo found
-        resources.ammo = min(resources.ammo + ammo_found, 100)  # Cap ammo at 100
-        print(f"You found {ammo_found} ammo in the box.")
+        # Determine the amount of ammo found (2 or 3 pieces)
+        ammo_found = random.randint(2, 3)
+        
+        # Add the found ammo to the character's resources
+        resources.add_ammo(ammo_found)
+        
+        print(f"You found an ammo box! Gained {ammo_found} ammo.")
+        return True
 
 
 class WeaselEvent(Event):
     """
-    Event where the player encounters a weasel trying to steal food.
+    Represents a weasel event that tries to steal food.
     """
     def __init__(self):
+        super().__init__('weasel')
+    
+    def process_event(self, character, resources, success_rate):
         """
-        Initializes the weasel event with a description and effect.
+        Processes the weasel event.
         """
-        description = "A weasel tries to steal your food! You can try to kill it with ammo."
-        effect = {}  # Effects will be applied in the handle_event method
-        super().__init__(description, effect)
+        # Set a default success rate of 50%
+        default_success_rate = 0.5
+        
+        # Use the provided success rate if it's greater than the default
+        effective_success_rate = max(success_rate, default_success_rate)
 
-    def handle_event(self, resources):
-        """
-        Handles the weasel event.
-
-        :param resources: An instance of the Resource class to modify.
-        :return: None
-        """
-        if resources.ammo > 0:
-            # Player has ammo, chance to kill the weasel
-            resources.ammo -= 1
-            if random.random() < 0.5:  # 50% chance to kill the weasel
-                print("You successfully killed the weasel with your ammo. It didn't steal any food.")
-            else:
-                food_stolen = random.randint(1, 3)  # Randomly determine the amount of food stolen
-                resources.food = max(0, resources.food - food_stolen)  # Deduct stolen food, ensure it does not go below 0
-                print(f"The weasel escaped and stole {food_stolen} units of food.")
+        if random.random() < effective_success_rate:
+            food_stolen = random.randint(1, 3)
+            resources.food -= food_stolen
+            if resources.food < 0:
+                resources.food = 0
+            print(f"The weasel stole {food_stolen} food!")
+            return False
         else:
-            food_stolen = random.randint(1, 3)  # Randomly determine the amount of food stolen
-            resources.food = max(0, resources.food - food_stolen)  # Deduct stolen food, ensure it does not go below 0
-            print(f"The weasel steals {food_stolen} units of food from you.")
+            ammo_used = 1
+            resources.ammo -= ammo_used
+            if resources.ammo < 0:
+                resources.ammo = 0
+            print(f"You managed to scare off the weasel using 1 ammo!")
+            return True
 
+import random
 
 class TravelerEvent(Event):
     """
-    Event where the player encounters a traveler who could be good or bad.
+    Represents a traveler event with various outcomes based on player choices.
     """
     def __init__(self):
+        super().__init__('traveler')
+    
+    def process_event(self, character, resources, success_rate):
         """
-        Initializes the traveler event with a description and effect.
+        Processes the traveler event.
         """
-        description = "You encounter a traveler who could be friendly or hostile."
-        effect = {}  # Effects will be applied in the handle_event method
-        super().__init__(description, effect)
-
-    def handle_event(self, resources):
-        """
-        Handles the traveler event.
-
-        :param resources: An instance of the Resource class to modify.
-        :return: None
-        """
-        if random.random() < 0.5:  # 50% chance traveler is good
-            print("The traveler is friendly and offers you a place to rest. Your health is restored to 10.")
-            resources.health = 10
-        else:  # Traveler is hostile
-            print("The traveler is hostile! You need to fight him.")
-            while True:
-                if resources.ammo > 0:
-                    action = input("Do you want to use ammo to fight the traveler? (yes/no): ").strip().lower()
-                    if action == 'yes':
-                        resources.ammo -= 1
-                        if random.random() < 0.5:  # 50% chance the traveler will shoot
-                            resources.health = max(0, resources.health - 3)  # Deduct health, ensure it does not go below 0
-                            print("You killed the traveler, but he shot you and you lost 3 health.")
-                        else:
-                            print("You killed the traveler and avoided being shot.")
-                        break
-                    else:
-                        print("You missed the chance to fight. The traveler continues to attack!")
+        # Prompt the player to shoot or not
+        shoot_choice = input("Do you want to shoot the traveler? (yes/no): ").strip().lower()
+        
+        if shoot_choice == 'yes':
+            # 50/50 chance to kill the traveler
+            if random.random() < 0.5:
+                print("You successfully shot the traveler!")
+                resources.health = 10
+                return True
+            else:
+                print("You missed the shot. The traveler retaliates!")
+                if random.random() < 0.5:
+                    print("The traveler hits you. You lose 4 health.")
+                    resources.health -= 4
                 else:
-                    print("You have no ammo to fight the traveler. The traveler steals 3 health from you.")
-                    resources.health = max(0, resources.health - 3)  # Deduct health, ensure it does not go below 0
-                    break
+                    print("The traveler misses you. You lose 3 food.")
+                    resources.food = max(0, resources.food - 3)
+                return True
+        else:
+            # 50/50 chance the traveler is good or bad
+            if random.random() < 0.5:
+                print("The traveler is good and lets you stay at his camp. Your health is restored to 10.")
+                resources.health = 10
+            else:
+                print("The traveler is bad. He tries to shoot you!")
+                if random.random() < 0.5:
+                    print("The traveler hits you. You lose 4 health.")
+                    resources.health -= 4
+                else:
+                    print("The traveler misses you. You lose 3 food.")
+                    resources.food = max(0, resources.food - 3)
+                
+                # 50/50 chance to hit the traveler
+                if random.random() < 0.5:
+                    print("You manage to hit the traveler. You take some of his supplies.")
+                    if random.random() < 0.5:
+                        ammo_found = random.randint(1, 3)
+                        resources.add_ammo(ammo_found)
+                        print(f"Gained {ammo_found} ammo.")
+                    else:
+                        food_found = random.randint(1, 3)
+                        resources.add_food(food_found)
+                        print(f"Gained {food_found} food.")
+                else:
+                    print("You miss the traveler. No extra supplies gained.")
+            return True
+
+class SnakeBiteEvent(Event):
+    """
+    Represents a snake bite event that affects health.
+    """
+    def __init__(self):
+        super().__init__('snake_bite')
+    
+    def process_event(self, character, resources, success_rate):
+        """
+        Processes the snake bite event.
+        """
+        # Set a default success rate of 50%
+        default_success_rate = 0.5
+        
+        # Use the provided success rate if it's greater than the default
+        effective_success_rate = max(success_rate, default_success_rate)
+
+        if random.random() < effective_success_rate:
+            print("You managed to kill the snake!")
+            return True
+        else:
+            # If the snake is not killed, it will bite the character
+            health_lost = random.randint(1, 3)
+            resources.health -= health_lost
+            if resources.health < 0:
+                resources.health = 0
+            print(f"The snake bit you! Lost {health_lost} health.")
+            return False
+
+import random
+
+class ChestOfFoodEvent(Event):
+    """
+    Represents a chest of food event that gives the player extra food.
+    """
+    def __init__(self):
+        super().__init__('chest_of_food')
+    
+    def process_event(self, character, resources, success_rate):
+        """
+        Processes the chest of food event.
+        """
+        # Determine the amount of food found (1 or 2 pieces)
+        food_found = random.randint(1, 2)
+        
+        # Add the found food to the character's resources
+        resources.add_food(food_found)
+        
+        print(f"You found a chest of food! Gained {food_found} food.")
+        return True
