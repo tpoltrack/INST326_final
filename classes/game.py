@@ -79,7 +79,30 @@ class Game:
         print("Prepare to embark on a perilous journey across the Wild West.")
         print("Face dangerous challenges, discover hidden treasures, and forge your destiny.")
         input("Press Enter to continue...")
+        
+        while True:
+            choice = input("\nWould you like to (1) start a new game or (2) load a saved game? Enter 1 or 2: ").strip()
+        
+            if choice == '1':
+                self._create_character()
+                break
+            elif choice == '2':
+                self.load_state()
+                if self.character is None:
+                    print("No saved game found. Starting a new game instead.")
+                    self._create_character()
+                else:
+                    print("Loaded saved game successfully!")
+                    break
+            else:
+                print("Invalid choice. Please enter 1 or 2.")
+                
+        print("\nGame Has Started")
 
+    def _create_character(self):
+        """
+        Handles character creation process.
+        """
         if self.character is None or self.resources is None:
             print("\nLet's create your character.")
             name = input("Enter your character's name: ")
@@ -93,7 +116,6 @@ class Game:
             print(self.character)
             print(f"{'='*30}")
 
-        print("\nGame Started!")
 
     def _choose_role(self):
         """
@@ -221,14 +243,62 @@ class Game:
             print("==============================")
         else:
             print("No character has been created yet.")
+            
+    
+    def game_over(self):
+        """
+        Handles the game over scenario when the character's food or health reaches 0.
+        """
+        print("\nGame Over!")
+        print("Your character has run out of food or health.")
+        self.show_character()
+        self.show_resources()
+
+        restart = input("\nWould you like to play again? (yes/no): ").strip().lower()
+        if restart == 'yes':
+            self.__init__()  # Reinitialize the game
+            self.start_game()
+        else:
+            print("Thank you for playing! Goodbye!")
+            
+    def end_game(self):
+        """
+        Handles the end of the game scenario when the player reaches round 30.
+        """
+        print("\nCongratulations! You've reached your destination and are soon to be called home.")
+        print("You have successfully completed your journey.")
+        print(f"\nSummary:")
+        print(f"Name      : {self.character.name}")
+        print(f"Role      : {self.character.role}")
+        print(f"Food      : {self.character.resources.food}")
+        print(f"Ammo      : {self.character.resources.ammo}")
+        print(f"Health    : {self.character.resources.health}")
+        print(f"Rounds Completed: {self.event_count}")
+    
+        # Exit the game
+        print("Thank you for playing Red Trail Frontier!")
+        exit()
+        
 
     def apply_random_event(self):
         """
         Applies a random event to the character and updates the game state.
         """
         if self.character:
+            # 33% chance to lose one food per round
+            if random.random() < 0.33:
+                self.character.resources.food = max(0, self.character.resources.food - 1)
+                print("You feel a bit hungry and lose 1 food.")
+                
+            if self.event_count >= 30:
+                self.end_game()
+                return
+            
+            if self.character.resources.food <= 0 or self.character.resources.health <= 0:
+                self.game_over()
+                return
+            
             event = random.choice(self.events)
-            print(f"\nYou encounter a {event.__class__.__name__}!")
 
             # Apply role-specific abilities
             success_rate = event.calculate_success_rate()
@@ -236,7 +306,6 @@ class Game:
 
             # Process the event
             result = event.process_event(self.character, self.character.resources, success_rate)
-            print("Event Result:", "Success" if result else "Failure")
 
             self.event_count += 1
             self.character.unlock_ability(self.event_count)
@@ -246,3 +315,23 @@ class Game:
             self.show_resources()
         else:
             print("No character has been created yet.")
+            
+        
+    def restart(self):
+        """
+        Restarts the game by resetting character and resources, and resetting the event count.
+        """
+        print("\nRestarting the game...")
+
+        # Reset character and resources
+        self.character = None
+        self.resources = None
+        self.event_count = 0
+
+        # Optionally, reinitialize events if needed
+        self.events = [AmmoBoxEvent(), WeaselEvent(), TravelerEvent(), SnakeBiteEvent(), ChestOfFoodEvent()]
+
+        # Inform the player
+        print("\nThe game has been reset.")
+        print("You can create a new character or load a saved game.")
+    

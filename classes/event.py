@@ -48,37 +48,48 @@ class AmmoBoxEvent(Event):
 
 class WeaselEvent(Event):
     """
-    Represents a weasel event that tries to steal food.
+    Represents a weasel encounter event with options to flee or fight.
     """
     def __init__(self):
         super().__init__('weasel')
-    
+
     def process_event(self, character, resources, success_rate):
         """
-        Processes the weasel event.
+        Processes the weasel encounter event with options to flee or fight.
         """
-        # Set a default success rate of 50%
-        default_success_rate = 0.5
-        
-        # Use the provided success rate if it's greater than the default
-        effective_success_rate = max(success_rate, default_success_rate)
+        print("You have encountered a weasel!")
 
-        if random.random() < effective_success_rate:
-            food_stolen = random.randint(1, 3)
-            resources.food -= food_stolen
-            if resources.food < 0:
-                resources.food = 0
-            print(f"The weasel stole {food_stolen} food!")
-            return False
-        else:
-            ammo_used = 1
-            resources.ammo -= ammo_used
-            if resources.ammo < 0:
-                resources.ammo = 0
-            print(f"You managed to scare off the weasel using 1 ammo!")
-            return True
+        while True:
+            flee_choice = input("Do you wish to try to flee? (y/n): ").strip().lower()
+            
+            if flee_choice == 'y':
+                # 50/50 chance to flee successfully
+                if random.random() < 0.5:
+                    print("You successfully fled from the weasel!")
+                    return True
+                else:
+                    stolen_food = random.randint(1, 3)
+                    print(f"You failed to flee. The weasel stole {stolen_food} food!")
+                    resources.food -= stolen_food
+                    return True
+            elif flee_choice == 'n':
+                # Player chooses to fight the weasel
+                print("You chose to fight the weasel!")
+                if random.random() < 0.5:
+                    print("You managed to kill the weasel!")
+                    resources.ammo -= 1
+                    resources.food += 1
+                    print("You lose 1 ammo.")
+                else:
+                    stolen_food = random.randint(1, 3)
+                    print(f"You missed the weasel! It stole {stolen_food} food.")
+                    resources.ammo -= 1
+                    resources.food -= stolen_food
+                    print("You lose 1 ammo and food.")
+                return True
+            else:
+                print("Invalid input. Please enter 'y' or 'n'.")
 
-import random
 
 class TravelerEvent(Event):
     """
@@ -91,83 +102,101 @@ class TravelerEvent(Event):
         """
         Processes the traveler event.
         """
-        # Prompt the player to shoot or not
-        shoot_choice = input("Do you want to shoot the traveler? (yes/no): ").strip().lower()
-        
-        if shoot_choice == 'yes':
-            # 50/50 chance to kill the traveler
-            if random.random() < 0.5:
-                print("You successfully shot the traveler!")
-                resources.health = 10
-                return True
-            else:
-                print("You missed the shot. The traveler retaliates!")
+        while True:
+            print("\nYou find a traveler and you are unsure of his intentions")
+            shoot_choice = input("Do you want to shoot the traveler? (y/n): ").strip().lower()
+
+            if shoot_choice == 'y':
+                # 50/50 chance to kill the traveler
                 if random.random() < 0.5:
-                    print("The traveler hits you. You lose 4 health.")
-                    resources.health -= 4
+                    print("You successfully shot the traveler!")
+                    resources.health = 10
+                    return True
                 else:
-                    print("The traveler misses you. You lose 3 food.")
-                    resources.food = max(0, resources.food - 3)
-                return True
-        else:
-            # 50/50 chance the traveler is good or bad
-            if random.random() < 0.5:
-                print("The traveler is good and lets you stay at his camp. Your health is restored to 10.")
-                resources.health = 10
-            else:
-                print("The traveler is bad. He tries to shoot you!")
-                if random.random() < 0.5:
-                    print("The traveler hits you. You lose 4 health.")
-                    resources.health -= 4
-                else:
-                    print("The traveler misses you. You lose 3 food.")
-                    resources.food = max(0, resources.food - 3)
-                
-                # 50/50 chance to hit the traveler
-                if random.random() < 0.5:
-                    print("You manage to hit the traveler. You take some of his supplies.")
+                    print("You missed the shot. The traveler retaliates!")
                     if random.random() < 0.5:
-                        ammo_found = random.randint(1, 3)
-                        resources.add_ammo(ammo_found)
-                        print(f"Gained {ammo_found} ammo.")
+                        print("The traveler hits you. You lose 4 health.")
+                        resources.health -= 4
                     else:
-                        food_found = random.randint(1, 3)
-                        resources.add_food(food_found)
-                        print(f"Gained {food_found} food.")
+                        print("The traveler misses you. You lose 3 food.")
+                        resources.food = max(0, resources.food - 3)
+                    return True
+            
+            elif shoot_choice == 'n':
+                # 50/50 chance the traveler is good or bad
+                if random.random() < 0.5:
+                    print("The traveler is good and lets you stay at his camp. Your health is restored to 10.")
+                    resources.health = 10
                 else:
-                    print("You miss the traveler. No extra supplies gained.")
-            return True
+                    print("The traveler is bad. He tries to shoot you!")
+                    if random.random() < 0.5:
+                        print("The traveler hits you. You lose 4 health.")
+                        resources.health -= 4
+                    else:
+                        print("The traveler misses you. You lose 3 food.")
+                        resources.food = max(0, resources.food - 3)
+                    
+                    # 50/50 chance to hit the traveler
+                    if random.random() < 0.5:
+                        print("You manage to hit the traveler. You take some of his supplies.")
+                        if random.random() < 0.5:
+                            ammo_found = random.randint(1, 3)
+                            resources.add_ammo(ammo_found)
+                            print(f"Gained {ammo_found} ammo.")
+                        else:
+                            food_found = random.randint(1, 3)
+                            resources.add_food(food_found)
+                            print(f"Gained {food_found} food.")
+                    else:
+                        print("You miss the traveler. No extra supplies gained.")
+                return True
+            
+            else:
+                print("Invalid input. Please enter 'yes' or 'no'.")
 
 class SnakeBiteEvent(Event):
     """
-    Represents a snake bite event that affects health.
+    Represents a snake bite event with options to flee or fight.
     """
     def __init__(self):
-        super().__init__('snake_bite')
-    
+        super().__init__('snakebite')
+
     def process_event(self, character, resources, success_rate):
         """
-        Processes the snake bite event.
+        Processes the snake bite event with options to flee or fight.
         """
-        # Set a default success rate of 50%
-        default_success_rate = 0.5
-        
-        # Use the provided success rate if it's greater than the default
-        effective_success_rate = max(success_rate, default_success_rate)
+        print("You have encountered a snake!")
 
-        if random.random() < effective_success_rate:
-            print("You managed to kill the snake!")
-            return True
-        else:
-            # If the snake is not killed, it will bite the character
-            health_lost = random.randint(1, 3)
-            resources.health -= health_lost
-            if resources.health < 0:
-                resources.health = 0
-            print(f"The snake bit you! Lost {health_lost} health.")
-            return False
+        while True:
+            flee_choice = input("Do you wish to try to flee? (y/n): ").strip().lower()
+            
+            if flee_choice == 'y':
+                # 50/50 chance to flee successfully
+                if random.random() < 0.5:
+                    print("You successfully fled from the snake!")
+                    return True
+                else:
+                    print("You failed to flee. The snake bites you!")
+                    resources.health -= 2
+                    print("You lose 2 health.")
+                    return True
+            elif flee_choice == 'n':
+                # Player chooses to fight the snake
+                print("You chose to fight the snake!")
+                if random.random() < 0.5:
+                    print("You managed to kill the snake!")
+                    resources.ammo -= 1
+                    resources.food += 1
+                    print("You lose 1 ammo.")
+                else:
+                    print("You missed the snake!")
+                    resources.ammo -= 1
+                    resources.health -= 2
+                    print("You lose 1 ammo and 2 health.")
+                return True
+            else:
+                print("Invalid input. Please enter 'yes' or 'no'.")
 
-import random
 
 class ChestOfFoodEvent(Event):
     """
