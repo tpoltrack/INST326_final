@@ -35,7 +35,8 @@ class Game:
                     'ammo': self.character.resources.ammo if self.character else 0,
                     'health': self.character.resources.health if self.character else 0,
                 },
-                'abilities': self.character.abilities if self.character else {}
+                'abilities': self.character.abilities if self.character else {'first': False, 'second': False, 'third': False},
+                'unlocked_abilities': self.character.unlocked_abilities if self.character else []
             },
             'events': [str(event) for event in self.events],
             'game_state': self.game_state
@@ -43,6 +44,7 @@ class Game:
 
         with open('game_data.json', 'w') as file:
             json.dump(game_data, file, indent=4)
+            print("\nGame Saved Successfully")
 
     def load_state(self):
         """
@@ -60,12 +62,16 @@ class Game:
                     ammo=game_data['character']['resources']['ammo'],
                     health=game_data['character']['resources']['health']
                 ),
-                abilities=game_data['character']['abilities']
+                abilities=game_data['character'].get('abilities', {'first': False, 'second': False, 'third': False}),
+                unlocked_abilities=game_data['character'].get('unlocked_abilities', [])
             )
 
             self.events = [SnakeBiteEvent(), ChestOfFoodEvent(), AmmoBoxEvent(), WeaselEvent(), TravelerEvent()]
 
             self.game_state = game_data['game_state']
+
+            print("Game loaded successfully!")
+
         except FileNotFoundError:
             print("No saved game found.")
         except json.JSONDecodeError:
@@ -106,7 +112,7 @@ class Game:
         if self.character is None or self.resources is None:
             print("\nLet's create your character.")
             name = input("Enter your character's name: ")
-            role, abilities = self._choose_role()
+            role, abilities = self._choose_role()  # Ensure abilities is a dictionary
 
             resources = Resource(food=10, ammo=10, health=10)  # Initialize resources here
             self.character = Character(name=name, role=role, resources=resources, abilities=abilities)
@@ -117,13 +123,14 @@ class Game:
             print(f"{'='*30}")
 
 
+
     def _choose_role(self):
         """
         Prompts the user to choose a character role and displays available roles with predefined abilities and unlock requirements.
 
         :return: The chosen role as a string and its corresponding abilities.
         """
-        # Define abilities and their unlock requirements
+        # Defines abilities and their unlock requirements
         role_abilities = {
             'Sharpshooter': {
                 'first': 'Increase success rate by 10% in shooting events.',
@@ -153,7 +160,7 @@ class Game:
         choice = input("\nEnter the number of your chosen role: ")
 
         role_name = self.roles.get(choice, 'Unknown')
-        abilities = self._get_role_abilities(role_name)
+        abilities = role_abilities.get(role_name, {'first': False, 'second': False, 'third': False})
         
         return role_name, abilities
 
@@ -185,7 +192,7 @@ class Game:
             'Explorer': ['Chance to get extra food or ammo'],
             'Pacifist': ['Chance to flee from health-threatening events']
         }
-        return abilities.get(role_name, [])
+        return abilities.get(role_name, {'first': False, 'second': False, 'third': False})
 
     def show_character(self):
         """
@@ -235,7 +242,7 @@ class Game:
         Displays the current state of the character's resources.
         """
         if self.character:
-            print("Character Resources:")
+            print("\nCharacter Resources:")
             print("==============================")
             print(f"Food      : {self.character.resources.food}")
             print(f"Ammo      : {self.character.resources.ammo}")
@@ -249,6 +256,7 @@ class Game:
         """
         Handles the game over scenario when the character's food or health reaches 0.
         """
+        
         print("\nGame Over!")
         print("Your character has run out of food or health.")
         self.show_character()
@@ -260,6 +268,7 @@ class Game:
             self.start_game()
         else:
             print("Thank you for playing! Goodbye!")
+            exit()
             
     def end_game(self):
         """
@@ -285,17 +294,29 @@ class Game:
         Applies a random event to the character and updates the game state.
         """
         if self.character:
+            # Check if the game is over before processing any event
+            if self.character.resources.food <= 0 or self.character.resources.health <= 0:
+                self.game_over()
+                return
+
             # 33% chance to lose one food per round
             if random.random() < 0.33:
                 self.character.resources.food = max(0, self.character.resources.food - 1)
-                print("You feel a bit hungry and lose 1 food.")
+                print("\nYou feel a bit hungry and lose 1 food.")
                 
-            if self.event_count >= 30:
-                self.end_game()
-                return
-            
+                # Check for game over immediately after reducing food
+                if self.character.resources.food <= 0:
+                    self.game_over()
+                    return
+
+            # Check again if the game is over before applying a new event
             if self.character.resources.food <= 0 or self.character.resources.health <= 0:
                 self.game_over()
+                return
+
+            # Process an event if the game is not over
+            if self.event_count >= 30:
+                self.end_game()
                 return
             
             event = random.choice(self.events)
@@ -306,6 +327,11 @@ class Game:
 
             # Process the event
             result = event.process_event(self.character, self.character.resources, success_rate)
+
+            # Check for game over after processing the event
+            if self.character.resources.food <= 0 or self.character.resources.health <= 0:
+                self.game_over()
+                return
 
             self.event_count += 1
             self.character.unlock_ability(self.event_count)
@@ -328,10 +354,6 @@ class Game:
         self.resources = None
         self.event_count = 0
 
-        # Optionally, reinitialize events if needed
-        self.events = [AmmoBoxEvent(), WeaselEvent(), TravelerEvent(), SnakeBiteEvent(), ChestOfFoodEvent()]
-
-        # Inform the player
         print("\nThe game has been reset.")
-        print("You can create a new character or load a saved game.")
-    
+        
+        self.start_game()

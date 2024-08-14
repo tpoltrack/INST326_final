@@ -39,10 +39,10 @@ class AmmoBoxEvent(Event):
         # Determine the amount of ammo found (2 or 3 pieces)
         ammo_found = random.randint(2, 3)
         
-        # Add the found ammo to the character's resources
+        # Adds the found ammo to the character's resources
         resources.add_ammo(ammo_found)
         
-        print(f"You found an ammo box! Gained {ammo_found} ammo.")
+        print(f"\nYou found an ammo box! Gained {ammo_found} ammo.")
         return True
 
 
@@ -57,10 +57,10 @@ class WeaselEvent(Event):
         """
         Processes the weasel encounter event with options to flee or fight.
         """
-        print("You have encountered a weasel!")
+        print("\nYou have encountered a weasel!")
 
         while True:
-            flee_choice = input("Do you wish to try to flee? (y/n): ").strip().lower()
+            flee_choice = input("\nDo you wish to try to flee? (y/n): ").strip().lower()
             
             if flee_choice == 'y':
                 # 50/50 chance to flee successfully
@@ -79,7 +79,7 @@ class WeaselEvent(Event):
                     print("You managed to kill the weasel!")
                     resources.ammo -= 1
                     resources.food += 1
-                    print("You lose 1 ammo.")
+                    print("You lose 1 ammo and found 1 food.")
                 else:
                     stolen_food = random.randint(1, 3)
                     print(f"You missed the weasel! It stole {stolen_food} food.")
@@ -115,8 +115,8 @@ class TravelerEvent(Event):
                 else:
                     print("You missed the shot. The traveler retaliates!")
                     if random.random() < 0.5:
-                        print("The traveler hits you. You lose 4 health.")
-                        resources.health -= 4
+                        print("The traveler hits you. You lose 3 health.")
+                        resources.health -= 3
                     else:
                         print("The traveler misses you. You lose 3 food.")
                         resources.food = max(0, resources.food - 3)
@@ -140,11 +140,11 @@ class TravelerEvent(Event):
                     if random.random() < 0.5:
                         print("You manage to hit the traveler. You take some of his supplies.")
                         if random.random() < 0.5:
-                            ammo_found = random.randint(1, 3)
+                            ammo_found = random.randint(2, 3)
                             resources.add_ammo(ammo_found)
                             print(f"Gained {ammo_found} ammo.")
                         else:
-                            food_found = random.randint(1, 3)
+                            food_found = random.randint(2, 3)
                             resources.add_food(food_found)
                             print(f"Gained {food_found} food.")
                     else:
@@ -165,10 +165,10 @@ class SnakeBiteEvent(Event):
         """
         Processes the snake bite event with options to flee or fight.
         """
-        print("You have encountered a snake!")
+        print("\nYou have encountered a snake!")
 
         while True:
-            flee_choice = input("Do you wish to try to flee? (y/n): ").strip().lower()
+            flee_choice = input("\nDo you wish to try to flee? (y/n): ").strip().lower()
             
             if flee_choice == 'y':
                 # 50/50 chance to flee successfully
@@ -187,7 +187,7 @@ class SnakeBiteEvent(Event):
                     print("You managed to kill the snake!")
                     resources.ammo -= 1
                     resources.food += 1
-                    print("You lose 1 ammo.")
+                    print("You lose 1 ammo and found 1 food")
                 else:
                     print("You missed the snake!")
                     resources.ammo -= 1
@@ -210,10 +210,10 @@ class ChestOfFoodEvent(Event):
         Processes the chest of food event.
         """
         # Determine the amount of food found (1 or 2 pieces)
-        food_found = random.randint(1, 2)
+        food_found = random.randint(2, 3)
         
         # Add the found food to the character's resources
         resources.add_food(food_found)
         
-        print(f"You found a chest of food! Gained {food_found} food.")
+        print(f"\nYou found a chest of food! Gained {food_found} food.")
         return True

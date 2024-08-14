@@ -1,7 +1,7 @@
 # classes/character.py
 
 class Character:
-    def __init__(self, name, role, resources, abilities=None):
+    def __init__(self, name, role, resources, abilities=None, unlocked_abilities=None):
         """
         Initializes a character with a name, role, abilities, and resources.
 
@@ -9,15 +9,13 @@ class Character:
         :param role: The role of the character.
         :param resources: An instance of the Resource class for the character.
         :param abilities: A dictionary of abilities for the character.
+        :param unlocked_abilities: A list of unlocked abilities for the character.
         """
         self.name = name
         self.role = role
-        self.resources = resources  # Changed from inventory to resources
-        self.abilities = {'first': False, 'second': False, 'third': False}
-
-    def _initialize_abilities(self):
-        abilities = {'first': False, 'second': False, 'third': False}
-        return abilities
+        self.resources = resources
+        self.abilities = abilities if abilities is None else {'first': False, 'second': False, 'third': False}
+        self.unlocked_abilities = unlocked_abilities if unlocked_abilities is not None else []
 
     def unlock_ability(self, event_count):
         """
@@ -59,3 +57,4 @@ class Character:
 
     def __str__(self):
         return f"Name: {self.name}, Role: {self.role}, Resources: {self.resources}, Abilities: {self.abilities}"
+
